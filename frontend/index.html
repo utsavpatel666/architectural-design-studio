@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sahaj Space Studio</title>
+  <meta name="description"
+    content="Sahaj Space Studio designs residential and commercial interiors with calm layouts, refined materials, and turnkey execution." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css?v=15" />
+  <link rel="stylesheet" href="css/gallery3d.css?v=5" />
+  <!-- HERO SCROLL-SCRUB: the top hero now uses a scroll-scrubbing frame sequence as
+       its background instead of a video. Styles scoped so they cannot collide with
+       any existing rules in css/style.css. -->
+  <style>
+    .hero-scroll-wrap {
+      position: relative;
+      height: 300vh; /* scroll distance mapped across all frames - increase/decrease to change scrub speed */
+    }
+    .hero-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      width: 100%;
+      overflow: hidden;
+    }
+    #heroScrubCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 0;
+    }
+    .hero-scrub-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      color: #fff;
+      font-family: 'Manrope', -apple-system, Helvetica, Arial, sans-serif;
+      font-size: 0.95rem;
+      opacity: 0.75;
+      letter-spacing: 0.02em;
+    }
+    /* The text/CTA layer fades out as the person scrolls through the hero;
+       pointer-events are disabled once it's invisible so it stops intercepting clicks. */
+    .hero-text-layer {
+      position: relative;
+      z-index: 2;
+      will-change: opacity;
+    }
+    .hero-text-layer.is-faded {
+      pointer-events: none;
+    }
+    /* .hero's own CSS gives it an opaque background, which would otherwise
+       paint over the canvas sitting behind it in the same sticky container. */
+    .hero-sticky .hero {
+      background: transparent;
+      min-height: 0;
+      height: 100%;
+    }
+  </style>
+</head>
+ 
+<body>
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-mark logo" aria-label="Sahaj Space Studio">
+        <img src="assets/public/logo-twotone.png" alt="Sahaj Space Studio" />
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#work">Portfolio</a>
+        <a href="#signature">Approach</a>
+        <a href="#team">Team</a>
+        <a href="#process">Process</a>
+        <a href="#planner">Planner</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="mobileNav">
+        <span class="sr-only">Toggle navigation</span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+      <div class="nav-actions">
+        <a href="https://wa.me/919824806309" class="nav-whatsapp" id="navWhatsapp" target="_blank" rel="noopener" aria-label="WhatsApp">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.9 7L4 20l1.5-3.9A8 8 0 1 1 20 11.5Z" /><path d="M9 8.5c.5 2 2 3.5 4 4l1-1 2 1.5c-.5 1.5-1.5 2-3 1.5-3-.8-5.2-3-6-6-.5-1.5 0-2.5 1.5-3l1.5 2-1 1Z" /></svg>
+        </a>
+        <a href="#contact" class="nav-cta">Book a consult</a>
+      </div>
+      <nav class="mobile-nav" id="mobileNav" aria-label="Mobile primary navigation" hidden>
+        <a href="#work">Portfolio</a>
+        <a href="#signature">Approach</a>
+        <a href="#team">Team</a>
+        <a href="#process">Process</a>
+        <a href="#planner">Planner</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+ 
+  <main>
+    <section class="hero-scroll-wrap" id="top">
+      <div class="hero-sticky">
+        <canvas id="heroScrubCanvas"></canvas>
+        <div class="hero-scrub-loading" id="heroScrubLoading">Loading 0%</div>
+        <div class="hero">
+          <div class="hero-backdrop">
+            <div class="hero-media-scrim"></div>
+            <div class="hero-grain"></div>
+          </div>
+          <div class="hero-text-layer" id="heroTextLayer">
+            <div class="hero-shell">
+              <div class="hero-copy">
+                <p class="hero-eyebrow"><span>Ahmedabad, Gujarat</span><span>Residential / Commercial</span></p>
+                <h1 class="hero-title">Spaces with soul.<br><em>Designed for life.</em></h1>
+                <p class="hero-sub" id="heroTagline">
+                  Sahaj Space Studio designs homes and workspaces that feel tailored, warm, and deeply livable from day one.
+                </p>
+                <div class="hero-actions">
+                  <a href="#contact" class="button button-primary">Start your project</a>
+                  <a href="#work" class="button button-secondary">View collections</a>
+                </div>
+                <div class="hero-trust">
+                  <div>
+                    <span class="hero-trust-label">Mood</span>
+                    <strong>Quiet luxury</strong>
+                  </div>
+                  <div>
+                    <span class="hero-trust-label">Scope</span>
+                    <strong>Concept to handover</strong>
+                  </div>
+                  <div>
+                    <span class="hero-trust-label">Updates</span>
+                    <strong>Weekly site reviews</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <a class="hero-scroll-hint" href="#studio-intro" aria-label="Scroll to explore the studio">
+              <span>Scroll to explore</span>
+              <i aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+ 
+    <section class="studio-strip" id="studio-intro">
+      <div class="studio-strip-inner">
+        <div class="section-heading compact">
+          <span class="section-label">Studio snapshot</span>
+          <h2 id="studioHeadline">Designed with architecture discipline and hospitality softness.</h2>
+        </div>
+        <div class="studio-stats" id="studioStats" data-count="3">
+          <article class="stat-card">
+            <strong id="statProjects">12+</strong>
+            <span>Curated room concepts</span>
+          </article>
+          <article class="stat-card">
+            <strong id="statTypes">4</strong>
+            <span>Home and commercial categories</span>
+          </article>
+          <article class="stat-card">
+            <strong id="statFaqs">4</strong>
+            <span>Client questions already answered</span>
+          </article>
+        </div>
+        <div class="service-ribbon" id="studioPills">
+          <span>Turnkey interiors</span>
+          <span>Custom furniture</span>
+          <span>Lighting studies</span>
+          <span>Wardrobe planning</span>
+          <span>Site coordination</span>
+        </div>
+      </div>
+    </section>
+ 
+    <section class="spatial-story section-shell" id="spatialStory">
+      <div class="spatial-story-heading">
+        <div class="section-heading">
+          <span class="section-label">Read the room</span>
+          <h2>Good interiors are felt in the details you do not immediately notice.</h2>
+        </div>
+        <p>Explore three decisions that turn a beautiful image into a home that works naturally every day.</p>
+      </div>
+      <div class="spatial-canvas image-reveal">
+        <img src="assets/media/spatial-story.webp"
+          alt="Warm contemporary living room with considered lighting and natural materials" loading="lazy" decoding="async" />
+        <div class="spatial-shade"></div>
+        <button type="button" class="spatial-point is-active" style="--x: 23%; --y: 61%;" data-detail="circulation"
+          aria-label="Show circulation design detail" aria-pressed="true"><span>01</span></button>
+        <button type="button" class="spatial-point" style="--x: 59%; --y: 38%;" data-detail="lighting"
+          aria-label="Show lighting design detail" aria-pressed="false"><span>02</span></button>
+        <button type="button" class="spatial-point" style="--x: 78%; --y: 69%;" data-detail="materials"
+          aria-label="Show material design detail" aria-pressed="false"><span>03</span></button>
+        <div class="spatial-detail" id="spatialDetail" aria-live="polite">
+          <span id="spatialDetailIndex">01 / Planning</span>
+          <h3 id="spatialDetailTitle">Clear circulation</h3>
+          <p id="spatialDetailBody">Furniture and pathways are balanced so the room feels generous, even when the plan is compact.</p>
+        </div>
+        <span class="spatial-instruction">Select a point to read the design</span>
+      </div>
+    </section>
+ 
+    <!-- NEW 3D GALLERY FEATURE START -->
+    <section class="gallery3d-section" id="gallery3d" aria-labelledby="gallery3dTitle">
+      <div class="gallery3d-heading">
+        <span class="gallery3d-label">Interactive portfolio</span>
+        <h2 id="gallery3dTitle">Explore our spaces in three dimensions.</h2>
+        <p>Drag to orbit the collection. Select a project to reveal its story.</p>
+      </div>
+      <div class="gallery3d-scene" id="gallery3dScene">
+        <canvas id="gallery3dCanvas" aria-label="Interactive three-dimensional portfolio gallery"></canvas>
+        <div class="gallery3d-hint" id="gallery3dHint" aria-hidden="true">Drag to explore</div>
+        <article class="gallery3d-info" id="gallery3dInfo" aria-live="polite" hidden>
+          <button class="gallery3d-info-close" id="gallery3dInfoClose" type="button" aria-label="Close project details">×</button>
+          <span id="gallery3dInfoType"></span>
+          <h3 id="gallery3dInfoTitle"></h3>
+          <p id="gallery3dInfoDescription"></p>
+        </article>
+        <p class="gallery3d-status" id="gallery3dStatus" role="status">Preparing the interactive gallery…</p>
+      </div>
+    </section>
+    <!-- NEW 3D GALLERY FEATURE END -->
+ 
+    <section class="showcase section-shell" id="work">
+      <div class="section-heading">
+        <span class="section-label">Portfolio collections</span>
+        <h2>Browse by layout, then step into a more refined version of daily life.</h2>
+        <p>
+          Each collection is arranged around circulation, daylight, storage, and the rhythm of a home that has to work
+          as beautifully as it looks.
+        </p>
+      </div>
+      <div class="gallery-toolbar">
+        <div class="bhk-tabs" id="bhkTabs"></div>
+        <div class="gallery-meta">
+          <strong id="galleryCountLabel">0 spaces</strong>
+          <span id="gallerySummaryNote">Filtered by every available home type.</span>
+        </div>
+      </div>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </section>
+ 
+    <section class="signature section-shell" id="signature">
+      <div class="section-heading">
+        <span class="section-label">Signature approach</span>
+        <h2>A calmer, more classic design language for modern Indian homes.</h2>
+      </div>
+      <div class="signature-grid">
+        <article class="signature-card">
+          <span class="signature-index">01</span>
+          <h3>Structured planning</h3>
+          <p>We begin with proportions, movement, storage, and light before decorating anything.</p>
+        </article>
+        <article class="signature-card">
+          <span class="signature-index">02</span>
+          <h3>Material warmth</h3>
+          <p>Natural textures, muted contrast, and tactile finishes create homes that age gracefully.</p>
+        </article>
+        <article class="signature-card">
+          <span class="signature-index">03</span>
+          <h3>Livable luxury</h3>
+          <p>The result feels polished and elevated without becoming delicate or hard to maintain.</p>
+        </article>
+      </div>
+    </section>
+ 
+    <section class="team-story" id="team" aria-labelledby="teamStoryTitle">
+      <div class="team-story-track">
+        <div class="team-story-shell">
+          <header class="team-story-heading">
+            <span class="section-label on-dark">The studio</span>
+            <h2 id="teamStoryTitle">Meet the minds shaping every space.</h2>
+          </header>
+          <div class="team-stage" id="teamStage">
+            <div class="team-loading">
+              <span>Studio portraits</span>
+              <p>Loading the people behind the work...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+ 
+    <section class="process" id="process">
+      <div class="process-track">
+        <div class="process-intro">
+          <span class="section-label on-dark">Our process</span>
+          <h2>One studio, four clear stages, zero guesswork.</h2>
+        </div>
+        <div class="process-layout">
+          <div class="process-steps">
+            <article class="process-step is-active" data-step="1">
+              <span class="process-index">01</span>
+              <h3>Consult and measure</h3>
+              <p>We understand routines, pain points, wishlist items, and site realities before the concept phase
+                begins.</p>
+            </article>
+            <article class="process-step" data-step="2">
+              <span class="process-index">02</span>
+              <h3>Design and visualize</h3>
+              <p>Layouts, elevations, 3D views, and material direction come together so decisions feel confident and
+                clear.</p>
+            </article>
+            <article class="process-step" data-step="3">
+              <span class="process-index">03</span>
+              <h3>Build and coordinate</h3>
+              <p>Carpentry, lighting, finishes, and execution teams are aligned around one detailed plan.</p>
+            </article>
+            <article class="process-step" data-step="4">
+              <span class="process-index">04</span>
+              <h3>Style and hand over</h3>
+              <p>Final accessories, snag resolution, and move-in readiness complete the experience.</p>
+            </article>
+          </div>
+          <div class="process-visuals">
+            <div class="process-visual is-active" data-step="1">
+              <img src="assets/media/1.jpg" alt="Consult and measure" loading="lazy" decoding="async" />
+              <div><span>Brief</span><strong>Space audit, measurements, wishlist, and use-case mapping.</strong></div>
+            </div>
+            <div class="process-visual" data-step="2">
+              <img src="assets/media/2.jpg" alt="Design and visualize" loading="lazy" decoding="async" />
+              <div><span>Design deck</span><strong>Concept boards, layouts, 3D previews, and finish pairings.</strong></div>
+            </div>
+            <div class="process-visual" data-step="3">
+              <img src="assets/media/3.jpg" alt="Build and coordinate" loading="lazy" decoding="async" />
+              <div><span>Execution</span><strong>Site supervision, vendor alignment, and milestone tracking.</strong></div>
+            </div>
+            <div class="process-visual" data-step="4">
+              <img src="assets/media/4.jpg" alt="Style and hand over" loading="lazy" decoding="async" />
+              <div><span>Handover</span><strong>Styling pass, final corrections, and a polished move-in finish.</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+ 
+    <section class="planner section-shell" id="planner">
+      <div class="section-heading">
+        <span class="section-label">Project planner</span>
+        <h2>Help us understand the mood of your project before we talk.</h2>
+        <p>Select the closest fit. We use this to shape the first consultation and prefill your enquiry context.</p>
+      </div>
+      <div class="planner-grid">
+        <div class="planner-controls">
+          <div class="planner-group pkg-planner-group">
+            <h3>Home types and plans</h3>
+            <div class="pkg-home-types" id="pkgHomeTypes" role="group" aria-label="Home types"></div>
+            <div class="pkg-plan-grid" id="pkgPlanGrid" aria-live="polite"></div>
+            <p class="pkg-footnote" id="pkgFootnote"></p>
+          </div>
+          <div class="planner-group">
+            <h3>Design mood</h3>
+            <div class="planner-options" data-group="mood">
+              <button type="button" class="planner-chip is-active" data-value="Warm minimal">Warm minimal</button>
+              <button type="button" class="planner-chip" data-value="Classic contemporary">Classic contemporary</button>
+              <button type="button" class="planner-chip" data-value="Earthy luxe">Earthy luxe</button>
+              <button type="button" class="planner-chip" data-value="Quiet office">Quiet office</button>
+            </div>
+          </div>
+          <div class="planner-group">
+            <h3>Timeline</h3>
+            <div class="planner-options" data-group="timeline">
+              <button type="button" class="planner-chip is-active" data-value="Ready in 2-3 months">Ready in 2-3
+                months</button>
+              <button type="button" class="planner-chip" data-value="Planning for 4-6 months">Planning for 4-6
+                months</button>
+              <button type="button" class="planner-chip" data-value="Early exploration">Early exploration</button>
+            </div>
+          </div>
+        </div>
+        <aside class="planner-summary" id="plannerSummary">
+          <span class="section-label">Recommended direction</span>
+          <h3>Warm minimal for a 2BHK planned in the next 2-3 months.</h3>
+          <p>
+            We would likely begin with storage-sensitive planning, layered neutral materials, and soft lighting that
+            keeps the home bright without feeling clinical.
+          </p>
+          <a href="#contact" class="button button-primary planner-apply" id="plannerApply">Use this in my enquiry</a>
+        </aside>
+      </div>
+    </section>
+ 
+    <section class="faq section-shell" id="faq">
+      <div class="section-heading">
+        <span class="section-label">Client FAQ</span>
+        <h2>Questions clients usually ask before starting.</h2>
+      </div>
+      <div class="faq-list" id="faqList"></div>
+    </section>
+ 
+    <section class="contact" id="contact">
+      <div class="contact-inner">
+        <div class="contact-info">
+          <span class="section-label on-dark">Start your project</span>
+          <h2>Tell us about the space. We will take it from there.</h2>
+          <p>
+            Share the basics now and we will reply with the best next step, whether that is a call, site visit, or
+            material-first consultation.
+          </p>
+          <div class="contact-note" id="plannerEcho">
+            Planner selected: <strong>2BHK / Warm minimal / Ready in 2-3 months</strong>
+          </div>
+          <ul class="contact-channels" id="contactChannels"></ul>
+        </div>
+ 
+        <div class="contact-right">
+          <form class="contact-form" id="contactForm">
+            <div class="form-grid">
+              <div class="form-row">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required maxlength="100" />
+              </div>
+              <div class="form-row">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required maxlength="150" />
+              </div>
+              <div class="form-row">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" required maxlength="20" />
+              </div>
+              <div class="form-row">
+                <label for="bhk_interest">Project type</label>
+                <select id="bhk_interest" name="bhk_interest">
+                  <option value="">Select one</option>
+                  <option value="1BHK">1BHK</option>
+                  <option value="2BHK">2BHK</option>
+                  <option value="3BHK">3BHK</option>
+                  <option value="4BHK+">4BHK+</option>
+                  <option value="Commercial">Commercial / Office</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label for="budget">Budget</label>
+                <span class="budget-field">
+                  <input type="text" id="budget" name="budget" inputmode="decimal" />
+                  <span class="budget-unit">Lakh</span>
+                </span>
+              </div>
+            </div>
+            <div class="form-row">
+              <label for="message">Tell us about the rooms, timeline, or what needs fixing</label>
+              <textarea id="message" name="message" rows="6" maxlength="1000"></textarea>
+            </div>
+            <button type="submit" class="form-submit">Send enquiry</button>
+            <p class="form-helper">We will include your planner preferences automatically with this submission.</p>
+            <p class="form-status" id="formStatus"></p>
+          </form>
+
+          <nav class="contact-socials" id="contactSocials" aria-label="Contact links">
+            <a href="#" class="contact-social" id="socialEmail" aria-label="Email" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2 8 5 8-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            </a>
+            <a href="#" class="contact-social" id="socialWhatsapp" target="_blank" rel="noopener" aria-label="WhatsApp" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.9 7L4 20l1.5-3.9A8 8 0 1 1 20 11.5Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 8.5c.5 2 2 3.5 4 4l1-1 2 1.5c-.5 1.5-1.5 2-3 1.5-3-.8-5.2-3-6-6-.5-1.5 0-2.5 1.5-3l1.5 2-1 1Z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+            </a>
+            <a href="#" class="contact-social" id="socialInstagram" target="_blank" rel="noopener" aria-label="Instagram" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+            </a>
+            <a href="#" class="contact-social" id="socialLocation" target="_blank" rel="noopener" aria-label="Location" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </section>
+  </main>
+ 
+  <footer class="site-footer">
+    <p>Sahaj Space Studio creates tailored interior environments with clarity, warmth, and architectural calm.</p>
+    <p>&copy; <span id="year"></span> Sahaj Space Studio. All rights reserved.</p>
+  </footer>
+ 
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Close gallery preview">Close</button>
+    <div class="lightbox-dialog">
+      <div class="lightbox-media" id="lightboxMedia"></div>
+      <div class="lightbox-copy">
+        <span class="section-label">Gallery preview</span>
+        <h3 id="lightboxTitle">Project title</h3>
+        <p id="lightboxDescription">A closer look at the design direction.</p>
+      </div>
+    </div>
+  </div>
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="js/main.js?v=11"></script>
+  <!-- NEW 3D GALLERY FEATURE START -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    window.THREE = THREE;
+  </script>
+  <script src="js/gallery3d.js?v=6"></script>
+  <!-- NEW 3D GALLERY FEATURE END -->
+ 
+  <!-- HERO SCROLL-SCRUB SCRIPT: drives the background frame sequence AND fades the
+       hero text/CTA layer out as the person scrolls. Self-contained, unique IDs
+       (heroScrubCanvas / heroScrubLoading / heroTextLayer), does not touch or depend
+       on main.js or gallery3d.js. Update FRAME_COUNT / FRAME_PATH if you regenerate
+       the frame set. TEXT_FADE_END controls how much of the scroll (0-1) it takes for
+       the text to fully disappear - 0.28 means it's gone by 28% through the hero scroll. -->
+  <script>
+  (function () {
+    var FRAME_COUNT = 70;
+    var TEXT_FADE_END = 0.28;
+    var FRAME_PATH = function (i) {
+      return 'scroll_hero_package/hero_frames_webp/frame_' + String(i).padStart(3, '0') + '.webp';
+    };
+ 
+    var canvas = document.getElementById('heroScrubCanvas');
+    if (!canvas) return; // section not present on this page, do nothing
+    var ctx = canvas.getContext('2d');
+    var loadingText = document.getElementById('heroScrubLoading');
+    var wrapper = canvas.closest('.hero-scroll-wrap');
+    var textLayer = document.getElementById('heroTextLayer');
+ 
+    var images = new Array(FRAME_COUNT);
+    var loadedCount = 0;
+    var currentFrame = -1;
+ 
+    function resizeCanvas() {
+      var dpr = window.devicePixelRatio || 1;
+      if (window.matchMedia('(max-width: 780px)').matches) dpr = Math.min(dpr, 1.5);
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+      drawFrame(Math.max(currentFrame, 0));
+    }
+    window.addEventListener('resize', resizeCanvas);
+ 
+    var lastDrawnFrame = 0;
+    function nearestLoadedFrame(target) {
+      if (images[target] && images[target].complete && images[target].naturalWidth) return target;
+      for (var offset = 1; offset < FRAME_COUNT; offset++) {
+        var down = target - offset, up = target + offset;
+        if (down >= 0 && images[down] && images[down].complete && images[down].naturalWidth) return down;
+        if (up < FRAME_COUNT && images[up] && images[up].complete && images[up].naturalWidth) return up;
+      }
+      return lastDrawnFrame;
+    }
+    function drawFrame(index) {
+      var actual = nearestLoadedFrame(index);
+      var img = images[actual];
+      if (!img || !img.complete || !img.naturalWidth) return;
+      lastDrawnFrame = actual;
+      var canvasRatio = canvas.width / canvas.height;
+      var imgRatio = img.width / img.height;
+      var drawWidth, drawHeight, offsetX, offsetY;
+      if (imgRatio > canvasRatio) {
+        drawHeight = canvas.height;
+        drawWidth = img.width * (drawHeight / img.height);
+        offsetX = (canvas.width - drawWidth) / 2;
+        offsetY = 0;
+      } else {
+        drawWidth = canvas.width;
+        drawHeight = img.height * (drawWidth / img.width);
+        offsetX = 0;
+        offsetY = (canvas.height - drawHeight) / 2;
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+    }
+ 
+    var PRIORITY_FRAMES = 24;
+
+    function loadFrame(idx, onDone) {
+      var img = new Image();
+      img.decoding = 'async';
+      img.onload = img.onerror = function () {
+        loadedCount++;
+        if (loadingText) loadingText.textContent = 'Loading ' + Math.round((loadedCount / FRAME_COUNT) * 100) + '%';
+        if (onDone) onDone();
+      };
+      img.src = FRAME_PATH(idx + 1);
+      images[idx] = img;
+    }
+
+    function loadRemainingFrames(startIndex) {
+      var i = startIndex;
+      function loadNext() {
+        if (i >= FRAME_COUNT) return;
+        var idx = i++;
+        loadFrame(idx, function () {
+          drawFrame(currentFrame);
+          (window.requestIdleCallback || function (fn) { setTimeout(fn, 50); })(loadNext);
+        });
+      }
+      loadNext();
+    }
+
+    function preloadImages() {
+      var priorityCount = Math.min(PRIORITY_FRAMES, FRAME_COUNT);
+      var priorityLoaded = 0;
+      for (var i = 0; i < priorityCount; i++) {
+        loadFrame(i, function () {
+          priorityLoaded++;
+          if (priorityLoaded === priorityCount) {
+            if (loadingText) loadingText.style.display = 'none';
+            resizeCanvas();
+            drawFrame(0);
+            currentFrame = 0;
+            loadRemainingFrames(priorityCount);
+          }
+        });
+      }
+    }
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        var rect = wrapper.getBoundingClientRect();
+        var scrollDistance = wrapper.offsetHeight - window.innerHeight;
+        var scrolled = Math.min(Math.max(-rect.top, 0), scrollDistance);
+        var progress = scrollDistance > 0 ? scrolled / scrollDistance : 0;
+ 
+        var targetFrame = Math.min(FRAME_COUNT - 1, Math.floor(progress * FRAME_COUNT));
+        if (targetFrame !== currentFrame) {
+          currentFrame = targetFrame;
+          drawFrame(currentFrame);
+        }
+ 
+        if (textLayer) {
+          var fadeProgress = Math.min(1, progress / TEXT_FADE_END);
+          textLayer.style.opacity = String(1 - fadeProgress);
+          textLayer.classList.toggle('is-faded', fadeProgress >= 1);
+        }
+ 
+        ticking = false;
+      });
+    }
+ 
+    window.addEventListener('scroll', onScroll, { passive: true });
+    resizeCanvas();
+    preloadImages();
+  })();
+  </script>
+</body>
+ 
+</html>

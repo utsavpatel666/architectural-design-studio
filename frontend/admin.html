@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin - Sahaj Space Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css?v=6" />
+</head>
+<body>
+
+<!-- ===== LOGIN VIEW ===== -->
+<div class="admin-login" id="loginView">
+  <form id="loginForm" class="login-card">
+    <h1>Admin sign in</h1>
+    <div class="form-row">
+      <label for="username">Username</label>
+      <input type="text" id="username" required autocomplete="username" />
+    </div>
+    <div class="form-row">
+      <label for="password">Password</label>
+      <input type="password" id="password" required autocomplete="current-password" />
+    </div>
+    <button type="submit">Sign in</button>
+    <p class="login-error" id="loginError"></p>
+  </form>
+</div>
+
+<!-- ===== DASHBOARD VIEW ===== -->
+<div class="admin-dashboard" id="dashboardView" style="display:none;">
+  <aside class="sidebar">
+    <div class="sidebar-mark">Sahaj Space Studio<br><span>Admin</span></div>
+    <nav>
+      <button class="nav-btn active" data-tab="overview">Overview</button>
+      <button class="nav-btn" data-tab="messages">Messages</button>
+      <button class="nav-btn" data-tab="gallery">Gallery</button>
+      <button class="nav-btn" data-tab="team">Team</button>
+      <button class="nav-btn" data-tab="faq">FAQ</button>
+      <button class="nav-btn" data-tab="packages">Packages</button>
+      <button class="nav-btn" data-tab="settings">Settings</button>
+    </nav>
+    <button class="logout-btn" id="logoutBtn">Sign out</button>
+  </aside>
+
+  <main class="main-panel">
+
+    <!-- Overview tab -->
+    <section class="tab-panel active" id="tab-overview">
+      <h2>Overview</h2>
+      <div class="stat-grid" id="statGrid"></div>
+    </section>
+
+    <!-- Messages tab -->
+    <section class="tab-panel" id="tab-messages">
+      <h2>Enquiries</h2>
+      <div class="messages-list" id="messagesList"></div>
+    </section>
+
+    <!-- Gallery tab -->
+    <section class="tab-panel" id="tab-gallery">
+      <h2>Gallery</h2>
+      <form class="upload-form" id="uploadForm">
+        <input type="text" id="g-title" placeholder="Title (e.g. Living room, Shela 3BHK)" required />
+        <select id="g-bhk" required>
+          <option value="">Home type</option>
+          <option value="1BHK">1BHK</option>
+          <option value="2BHK">2BHK</option>
+          <option value="3BHK">3BHK</option>
+          <option value="4BHK+">4BHK+</option>
+          <option value="Commercial">Commercial</option>
+        </select>
+        <select id="g-display" aria-label="Show in">
+          <option value="both">Show in: Both</option>
+          <option value="portfolio">Show in: Portfolio only</option>
+          <option value="gallery3d">Show in: 3D Gallery only</option>
+        </select>
+        <input type="text" id="g-desc" placeholder="Short description (optional)" />
+        <input type="file" id="g-file" accept="image/*,video/*" multiple title="Choose multiple images or videos" />
+        <button type="submit">Upload</button>
+      </form>
+      <div class="upload-preview" id="uploadPreview" aria-live="polite"></div>
+      <p class="upload-status" id="uploadStatus"></p>
+      <div class="gallery-list-filter" id="galleryListFilter" role="group" aria-label="Filter gallery items">
+        <span class="gallery-list-filter-label">Filter items</span>
+        <button type="button" class="gallery-filter-btn is-active" data-gallery-filter="all" aria-pressed="true">Both</button>
+        <button type="button" class="gallery-filter-btn" data-gallery-filter="portfolio" aria-pressed="false">Portfolio only</button>
+        <button type="button" class="gallery-filter-btn" data-gallery-filter="gallery3d" aria-pressed="false">3D Gallery only</button>
+      </div>
+      <div class="admin-gallery-grid" id="adminGalleryGrid"></div>
+    </section>
+
+    <!-- Team tab -->
+    <section class="tab-panel" id="tab-team">
+      <div class="panel-heading">
+        <div>
+          <h2>Studio team</h2>
+          <p>Add the people shown in the scroll-driven team story. Lower order numbers appear first.</p>
+        </div>
+      </div>
+      <form class="team-form" id="teamForm">
+        <div class="team-form-heading">
+          <strong id="teamFormTitle">Add member</strong>
+          <button type="button" class="text-btn" id="teamCancelEdit" hidden>Cancel editing</button>
+        </div>
+        <div class="team-form-grid">
+          <div class="form-row">
+            <label for="t-name">Name</label>
+            <input type="text" id="t-name" maxlength="100" placeholder="Member name" required />
+          </div>
+          <div class="form-row">
+            <label for="t-role">Role</label>
+            <input type="text" id="t-role" maxlength="120" placeholder="Principal designer" required />
+          </div>
+          <div class="form-row">
+            <label for="t-focus">Specialty</label>
+            <input type="text" id="t-focus" maxlength="180" placeholder="Space planning / Material direction" />
+          </div>
+          <div class="form-row order-field">
+            <label for="t-order">Display order</label>
+            <input type="number" id="t-order" min="0" step="1" value="0" />
+          </div>
+          <div class="form-row team-bio-field">
+            <label for="t-bio">Member details</label>
+            <textarea id="t-bio" maxlength="1200" rows="4" placeholder="A short introduction, experience, and design point of view." required></textarea>
+          </div>
+          <div class="form-row team-photo-field">
+            <label for="t-photo">Portrait photo</label>
+            <input type="file" id="t-photo" accept="image/jpeg,image/png,image/webp" />
+            <img id="teamCurrentPhoto" class="team-current-photo" alt="Current team portrait" hidden />
+            <small id="teamPhotoHelp">Required for a new member. Use a clear portrait image.</small>
+          </div>
+        </div>
+        <button type="submit" class="primary-action" id="teamSubmit">Add member</button>
+        <p class="team-status" id="teamStatus"></p>
+      </form>
+      <div class="admin-team-list" id="adminTeamList"></div>
+    </section>
+
+    <!-- FAQ tab -->
+    <section class="tab-panel" id="tab-faq">
+      <h2>FAQ</h2>
+      <form class="faq-form" id="faqForm">
+        <input type="text" id="f-question" placeholder="Question" required />
+        <textarea id="f-answer" placeholder="Answer" required rows="2"></textarea>
+        <button type="submit">Add FAQ</button>
+      </form>
+      <div class="admin-faq-list" id="adminFaqList"></div>
+    </section>
+
+    <section class="tab-panel" id="tab-packages">
+      <h2>Home types and plans</h2>
+      <div class="pkg-admin-layout">
+        <div class="pkg-admin-controls">
+          <label>Home type<select id="pkgAdminType"></select></label>
+          <label>Plan<select id="pkgAdminPlan"></select></label>
+          <label>Plan name<input id="pkgAdminPlanName" maxlength="30" /></label>
+          <label>Price (₹)<input id="pkgAdminPlanPrice" type="number" min="0" step="1" /></label>
+          <label>What this plan adds<input id="pkgAdminPlanNote" maxlength="90" /></label>
+          <label class="pkg-admin-check"><input id="pkgAdminPopular" type="checkbox" /> Show Most chosen badge</label>
+          <label>Home type inclusions<textarea id="pkgAdminInclusions" rows="6" placeholder="One item per line"></textarea></label>
+          <div class="pkg-admin-actions">
+            <button type="button" id="pkgAdminSave">Save changes</button>
+            <button type="button" id="pkgAdminAddPlan">Add a plan</button>
+            <button type="button" id="pkgAdminRemovePlan">Remove this plan</button>
+          </div>
+          <p class="pkg-admin-status" id="pkgAdminStatus"></p>
+        </div>
+        <div class="pkg-admin-new-type">
+          <label>New home type<input id="pkgAdminNewType" maxlength="30" placeholder="Villa" /></label>
+          <button type="button" id="pkgAdminAddType">Add a home type</button>
+          <button type="button" id="pkgAdminRemoveType">Remove this home type</button>
+        </div>
+      </div>
+      <label class="pkg-admin-footnote">Planner footnote<textarea id="pkgAdminFootnote" rows="3"></textarea></label>
+    </section>
+
+    <!-- Settings tab -->
+    <section class="tab-panel" id="tab-settings">
+      <h2>Contact settings</h2>
+      <form class="settings-form" id="settingsForm">
+        <div class="form-row">
+          <label>WhatsApp number</label>
+          <input type="text" id="s-whatsapp" placeholder="+919999999999" />
+        </div>
+        <div class="form-row">
+          <label>Instagram URL</label>
+          <input type="text" id="s-instagram" placeholder="https://instagram.com/yourpage" />
+        </div>
+        <div class="form-row">
+          <label>Contact email</label>
+          <input type="email" id="s-email" placeholder="hello@yourdomain.com" />
+        </div>
+        <div class="form-row">
+          <label>Location / Maps URL</label>
+          <input type="text" id="s-location" placeholder="https://maps.google.com/... or full address" />
+        </div>
+        <div class="form-row">
+          <label>Site tagline</label>
+          <input type="text" id="s-tagline" placeholder="Turning houses into homes." />
+        </div>
+        <button type="submit">Save settings</button>
+      </form>
+      <p class="settings-status" id="settingsStatus"></p>
+      <section class="studio-admin" aria-labelledby="studioAdminHeading">
+        <h3 id="studioAdminHeading">Studio Snapshot</h3>
+        <div class="form-row">
+          <label for="studioAdminHeadline">Headline</label>
+          <textarea id="studioAdminHeadline" rows="2" maxlength="240"></textarea>
+        </div>
+        <div class="studio-admin-group">
+          <div class="studio-admin-group-heading"><strong>Stat boxes</strong><span id="studioAdminStatsCount">3 / 5</span></div>
+          <div id="studioAdminStats" class="studio-admin-list"></div>
+          <button type="button" id="studioAdminAddStat">Add stat</button>
+          <small>Keep between 3 and 5 stat boxes.</small>
+        </div>
+        <div class="studio-admin-group">
+          <div class="studio-admin-group-heading"><strong>Pill tags</strong><span id="studioAdminPillsCount">5 / 15</span></div>
+          <div id="studioAdminPills" class="studio-admin-list"></div>
+          <button type="button" id="studioAdminAddPill">Add pill tag</button>
+          <small>Up to 15 pill tags.</small>
+        </div>
+        <button type="button" id="studioAdminSave" class="primary-action">Save Studio Snapshot</button>
+        <p class="settings-status" id="studioAdminStatus" aria-live="polite"></p>
+      </section>
+    </section>
+
+  </main>
+</div>
+
+<!-- Reply modal -->
+<div class="modal" id="replyModal" style="display:none;">
+  <div class="modal-card">
+    <h3>Reply to enquiry</h3>
+    <p id="replyContext"></p>
+    <textarea id="replyText" rows="4" placeholder="Write your reply..."></textarea>
+    <div class="modal-actions">
+      <button id="replyCancel" class="btn-secondary">Cancel</button>
+      <button id="replySend" class="btn-primary">Send reply</button>
+    </div>
+    <p class="modal-status" id="replyStatus"></p>
+  </div>
+</div>
+
+<div class="admin-toast" id="adminToast" role="status" aria-live="polite" aria-atomic="true" hidden>
+  <span class="admin-toast-icon" aria-hidden="true"></span>
+  <span class="admin-toast-message"></span>
+</div>
+
+<script src="js/admin.js?v=9"></script>
+</body>
+</html>
