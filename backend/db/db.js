@@ -7,7 +7,10 @@ const schemaPath = path.join(__dirname, "schema.sql");
 const connectionString = (
   process.env.DATABASE_URL || process.env.DB_PATH || ""
 ).replace(/^postgresql\+psycopg2:\/\//, "postgresql://") || null;
-const useSsl = String(process.env.PG_SSL || "false").toLowerCase() === "true";
+const useSsl =
+  String(process.env.PG_SSL || "").toLowerCase() === "true" ||
+  Boolean(process.env.DATABASE_URL);
+
 
 const pool = new Pool({
   connectionString,
@@ -17,6 +20,9 @@ const pool = new Pool({
   user: connectionString ? undefined : process.env.PGUSER,
   password: connectionString ? undefined : process.env.PGPASSWORD,
   ssl: useSsl ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 10000,
+  max: 3,
 });
 
 let initialized = false;

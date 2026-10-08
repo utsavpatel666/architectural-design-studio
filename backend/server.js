@@ -24,6 +24,19 @@ const packagesRoutes = require("./routes/packages");
 const adminRoutes = require("./routes/admin");
 
 const app = express();
+// Connect to the database once, before handling any request (needed on Vercel)
+let dbReady;
+app.use(async (req, res, next) => {
+  try {
+    if (!dbReady) dbReady = initDb();
+    await dbReady;
+    next();
+  } catch (error) {
+    dbReady = null;
+    console.error("Database init failed:", error);
+    res.status(500).json({ error: "Database connection failed." });
+  }
+});
 const PORT = process.env.PORT || 5000;
 const corsOrigin = process.env.CORS_ORIGIN;
 
@@ -120,7 +133,11 @@ async function startServer() {
   }
 }
 
-startServer();
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  startServer();
+}
 
 
 
