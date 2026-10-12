@@ -7,10 +7,11 @@ const schemaPath = path.join(__dirname, "schema.sql");
 const connectionString = (
   process.env.DATABASE_URL || process.env.DB_PATH || ""
 ).replace(/^postgresql\+psycopg2:\/\//, "postgresql://") || null;
+const isLocalDb = /@(localhost|127\.0\.0\.1)(:|\/)/i.test(connectionString || "");
+const sslFlag = String(process.env.PG_SSL || "").toLowerCase();
 const useSsl =
-  String(process.env.PG_SSL || "").toLowerCase() === "true" ||
-  Boolean(process.env.DATABASE_URL);
-
+  sslFlag === "true" ||
+  (sslFlag !== "false" && Boolean(connectionString) && !isLocalDb);
 
 const pool = new Pool({
   connectionString,
