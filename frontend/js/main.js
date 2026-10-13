@@ -1035,6 +1035,11 @@ function setupAnimations() {
   }
 
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({
+    ignoreMobileResize: true,
+    autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
+  });
+
 
   gsap.from(".hero-copy > *", {
     y: 28,
@@ -1071,9 +1076,12 @@ function setupAnimations() {
   animateReveal(document.querySelectorAll(".section-heading, .spatial-story-heading > p, .stat-card, .signature-card, .planner-controls, .planner-summary, .contact-info, .contact-form, .contact-socials"), 0.08);
   initProcessScroll();
   window.addEventListener("load", refreshScrollTriggers, { once: true });
+  let lastViewportWidth = window.innerWidth;
   window.addEventListener("resize", () => {
+    if (window.innerWidth === lastViewportWidth) return;
+    lastViewportWidth = window.innerWidth;
     clearTimeout(window.__processRefreshTimer);
-    window.__processRefreshTimer = setTimeout(refreshScrollTriggers, 120);
+    window.__processRefreshTimer = setTimeout(refreshScrollTriggers, 150);
   });
 }
 

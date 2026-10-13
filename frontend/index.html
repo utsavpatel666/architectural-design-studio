@@ -7,12 +7,14 @@
   <title>Sahaj Space Studio</title>
   <meta name="description"
     content="Sahaj Space Studio designs residential and commercial interiors with calm layouts, refined materials, and turnkey execution." />
+  <link id="heroFramePreload" rel="preload" as="image"
+    href="scroll_hero_package/hero_frames_webp/frame_001.webp?v=1" type="image/webp" fetchpriority="high" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=15" />
+  <link rel="stylesheet" href="css/style.css?v=16" />
   <link rel="stylesheet" href="css/gallery3d.css?v=5" />
   <!-- HERO SCROLL-SCRUB: the top hero now uses a scroll-scrubbing frame sequence as
        its background instead of a video. Styles scoped so they cannot collide with
@@ -494,7 +496,7 @@
  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="js/main.js?v=11"></script>
+  <script src="js/main.js?v=12"></script>
   <!-- NEW 3D GALLERY FEATURE START -->
   <script type="importmap">
   {
@@ -514,14 +516,16 @@
        hero text/CTA layer out as the person scrolls. Self-contained, unique IDs
        (heroScrubCanvas / heroScrubLoading / heroTextLayer), does not touch or depend
        on main.js or gallery3d.js. Update FRAME_COUNT / FRAME_PATH if you regenerate
-       the frame set. TEXT_FADE_END controls how much of the scroll (0-1) it takes for
-       the text to fully disappear - 0.28 means it's gone by 28% through the hero scroll. -->
+       the frame set. The preload link's ?v= value versions all frames for long-lived caching.
+       TEXT_FADE_END controls how much of the scroll (0-1) it takes for the text to
+       fully disappear - 0.28 means it's gone by 28% through the hero scroll. -->
   <script>
   (function () {
     var FRAME_COUNT = 70;
     var TEXT_FADE_END = 0.28;
+    var FRAME_SET_VERSION = new URL(document.getElementById('heroFramePreload').href).searchParams.get('v');
     var FRAME_PATH = function (i) {
-      return 'scroll_hero_package/hero_frames_webp/frame_' + String(i).padStart(3, '0') + '.webp';
+      return 'scroll_hero_package/hero_frames_webp/frame_' + String(i).padStart(3, '0') + '.webp?v=' + FRAME_SET_VERSION;
     };
  
     var canvas = document.getElementById('heroScrubCanvas');
@@ -530,27 +534,54 @@
     var loadingText = document.getElementById('heroScrubLoading');
     var wrapper = canvas.closest('.hero-scroll-wrap');
     var textLayer = document.getElementById('heroTextLayer');
- 
+
     var images = new Array(FRAME_COUNT);
+    var decodedFrames = new Array(FRAME_COUNT);
     var loadedCount = 0;
     var currentFrame = -1;
- 
+    var targetFrame = 0;
+    var easedFrame = 0;
+    var wrapperTop = 0;
+    var wrapperHeight = 0;
+    var lastViewportWidth = window.innerWidth;
+    var isMobileViewport = window.matchMedia('(max-width: 780px)').matches;
+
+    var lastCanvasW = 0, lastCanvasH = 0;
+    function refreshScrollBounds(updateTop) {
+      if (updateTop) wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
+      wrapperHeight = wrapper.offsetHeight;
+    }
+
     function resizeCanvas() {
       var dpr = window.devicePixelRatio || 1;
       if (window.matchMedia('(max-width: 780px)').matches) dpr = Math.min(dpr, 1.5);
-      canvas.width = canvas.clientWidth * dpr;
-      canvas.height = canvas.clientHeight * dpr;
-      drawFrame(Math.max(currentFrame, 0));
+      var w = Math.round(canvas.clientWidth * dpr);
+      var h = Math.round(canvas.clientHeight * dpr);
+      if (w === lastCanvasW && h === lastCanvasH) return;
+      lastCanvasW = w;
+      lastCanvasH = h;
+      canvas.width = w;
+      canvas.height = h;
+      if (currentFrame >= 0) drawFrame(currentFrame);
     }
-    window.addEventListener('resize', resizeCanvas);
- 
+
+    function onResize() {
+      var widthChanged = window.innerWidth !== lastViewportWidth;
+      if (isMobileViewport && !widthChanged) return;
+      lastViewportWidth = window.innerWidth;
+      isMobileViewport = window.matchMedia('(max-width: 780px)').matches;
+      refreshScrollBounds(widthChanged);
+      resizeCanvas();
+    }
+    window.addEventListener('resize', onResize);
+
     var lastDrawnFrame = 0;
     function nearestLoadedFrame(target) {
-      if (images[target] && images[target].complete && images[target].naturalWidth) return target;
+      if (decodedFrames[target]) return target;
       for (var offset = 1; offset < FRAME_COUNT; offset++) {
         var down = target - offset, up = target + offset;
-        if (down >= 0 && images[down] && images[down].complete && images[down].naturalWidth) return down;
-        if (up < FRAME_COUNT && images[up] && images[up].complete && images[up].naturalWidth) return up;
+        if (down >= 0 && decodedFrames[down]) return down;
+        if (up < FRAME_COUNT && decodedFrames[up]) return up;
       }
       return lastDrawnFrame;
     }
@@ -576,77 +607,138 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     }
- 
-    var PRIORITY_FRAMES = 24;
 
     function loadFrame(idx, onDone) {
       var img = new Image();
+      var finished = false;
       img.decoding = 'async';
-      img.onload = img.onerror = function () {
-        loadedCount++;
-        if (loadingText) loadingText.textContent = 'Loading ' + Math.round((loadedCount / FRAME_COUNT) * 100) + '%';
-        if (onDone) onDone();
-      };
-      img.src = FRAME_PATH(idx + 1);
+      if (idx === 0) img.fetchPriority = 'high';
       images[idx] = img;
+
+      function finish(success, error) {
+        if (finished) return;
+        finished = true;
+        if (success) {
+          decodedFrames[idx] = true;
+          loadedCount++;
+          if (loadingText) loadingText.textContent = 'Loading ' + Math.round((loadedCount / FRAME_COUNT) * 100) + '%';
+        } else {
+          images[idx] = null;
+          console.warn('Unable to load or decode hero frame ' + (idx + 1) + '.', error);
+        }
+        if (onDone) onDone(success);
+      }
+
+      img.onload = function () {
+        if (typeof img.decode !== 'function') {
+          finish(true);
+          return;
+        }
+        img.decode().then(function () {
+          finish(true);
+        }, function (error) {
+          finish(false, error);
+        });
+      };
+      img.onerror = function (error) { finish(false, error); };
+      img.src = FRAME_PATH(idx + 1);
     }
 
-    function loadRemainingFrames(startIndex) {
-      var i = startIndex;
+    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    var LOAD_CONCURRENCY = connection && connection.saveData ? 1 : (isMobileViewport ? 2 : 4);
+    var loadStages = [];
+    var queuedFrames = new Array(FRAME_COUNT);
+    queuedFrames[0] = true;
+    [16, 8, 4, 2, 1].forEach(function (stride) {
+      var stage = [];
+      for (var idx = 0; idx < FRAME_COUNT; idx += stride) {
+        if (!queuedFrames[idx]) {
+          queuedFrames[idx] = true;
+          stage.push(idx);
+        }
+      }
+      var finalIndex = FRAME_COUNT - 1;
+      if (!queuedFrames[finalIndex]) {
+        queuedFrames[finalIndex] = true;
+        stage.push(finalIndex);
+      }
+      if (stage.length) loadStages.push(stage);
+    });
+
+    function loadBatch(frames, onDone) {
+      var nextIndex = 0;
+      var completed = 0;
       function loadNext() {
-        if (i >= FRAME_COUNT) return;
-        var idx = i++;
+        if (nextIndex >= frames.length) return;
+        var idx = frames[nextIndex++];
         loadFrame(idx, function () {
-          drawFrame(currentFrame);
-          (window.requestIdleCallback || function (fn) { setTimeout(fn, 50); })(loadNext);
+          if (currentFrame >= 0 && nearestLoadedFrame(currentFrame) !== lastDrawnFrame) drawFrame(currentFrame);
+          completed++;
+          if (completed === frames.length) onDone();
+          else loadNext();
         });
       }
-      loadNext();
+      for (var worker = 0; worker < Math.min(LOAD_CONCURRENCY, frames.length); worker++) loadNext();
+    }
+
+    function loadRemainingFrames() {
+      var stageIndex = 0;
+      function loadNextStage() {
+        if (stageIndex >= loadStages.length) return;
+        loadBatch(loadStages[stageIndex++], loadNextStage);
+      }
+      loadNextStage();
     }
 
     function preloadImages() {
-      var priorityCount = Math.min(PRIORITY_FRAMES, FRAME_COUNT);
-      var priorityLoaded = 0;
-      for (var i = 0; i < priorityCount; i++) {
-        loadFrame(i, function () {
-          priorityLoaded++;
-          if (priorityLoaded === priorityCount) {
-            if (loadingText) loadingText.style.display = 'none';
-            resizeCanvas();
-            drawFrame(0);
-            currentFrame = 0;
-            loadRemainingFrames(priorityCount);
-          }
-        });
-      }
+      loadFrame(0, function (success) {
+        if (!success) {
+          if (loadingText) loadingText.textContent = 'Unable to load hero image';
+          return;
+        }
+        targetFrame = 0;
+        easedFrame = 0;
+        currentFrame = 0;
+        drawFrame(0);
+        if (loadingText) loadingText.style.display = 'none';
+        loadRemainingFrames();
+      });
     }
+
     var ticking = false;
+    function updateHeroFrame() {
+      var scrollDistance = Math.max(0, wrapperHeight - window.innerHeight);
+      var scrolled = Math.min(Math.max(window.scrollY - wrapperTop, 0), scrollDistance);
+      var progress = scrollDistance > 0 ? scrolled / scrollDistance : 0;
+      targetFrame = Math.min(FRAME_COUNT - 1, Math.floor(progress * FRAME_COUNT));
+
+      if (textLayer) {
+        var fadeProgress = Math.min(1, progress / TEXT_FADE_END);
+        textLayer.style.opacity = String(1 - fadeProgress);
+        textLayer.classList.toggle('is-faded', fadeProgress >= 1);
+      }
+
+      var difference = targetFrame - easedFrame;
+      if (Math.abs(difference) < 0.35) easedFrame = targetFrame;
+      else easedFrame += difference * 0.45;
+      var frame = Math.round(easedFrame);
+      if (frame !== currentFrame) {
+        currentFrame = frame;
+        drawFrame(frame);
+      }
+
+      if (Math.abs(targetFrame - easedFrame) >= 0.35) requestAnimationFrame(updateHeroFrame);
+      else ticking = false;
+    }
+
     function onScroll() {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(function () {
-        var rect = wrapper.getBoundingClientRect();
-        var scrollDistance = wrapper.offsetHeight - window.innerHeight;
-        var scrolled = Math.min(Math.max(-rect.top, 0), scrollDistance);
-        var progress = scrollDistance > 0 ? scrolled / scrollDistance : 0;
- 
-        var targetFrame = Math.min(FRAME_COUNT - 1, Math.floor(progress * FRAME_COUNT));
-        if (targetFrame !== currentFrame) {
-          currentFrame = targetFrame;
-          drawFrame(currentFrame);
-        }
- 
-        if (textLayer) {
-          var fadeProgress = Math.min(1, progress / TEXT_FADE_END);
-          textLayer.style.opacity = String(1 - fadeProgress);
-          textLayer.classList.toggle('is-faded', fadeProgress >= 1);
-        }
- 
-        ticking = false;
-      });
+      requestAnimationFrame(updateHeroFrame);
     }
- 
+
     window.addEventListener('scroll', onScroll, { passive: true });
+    refreshScrollBounds(true);
     resizeCanvas();
     preloadImages();
   })();

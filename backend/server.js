@@ -79,6 +79,8 @@ app.use(express.static(frontendPath, {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith("index.html") || filePath.endsWith("admin.html")) {
       res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    } else if (filePath.includes(`${path.sep}scroll_hero_package${path.sep}hero_frames_webp${path.sep}`)) {
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     }
   },
 }));
@@ -138,6 +140,5 @@ if (process.env.VERCEL) {
 } else {
   startServer();
 }
-
 
 
