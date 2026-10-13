@@ -14,7 +14,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=16" />
+  <link rel="stylesheet" href="css/style.css?v=19" />
   <link rel="stylesheet" href="css/gallery3d.css?v=5" />
   <!-- HERO SCROLL-SCRUB: the top hero now uses a scroll-scrubbing frame sequence as
        its background instead of a video. Styles scoped so they cannot collide with
@@ -30,6 +30,7 @@
       height: 100vh;
       width: 100%;
       overflow: hidden;
+      background: #201b17;
     }
     #heroScrubCanvas {
       position: absolute;
@@ -67,6 +68,12 @@
       background: transparent;
       min-height: 0;
       height: 100%;
+    }
+    @media (max-width: 780px) {
+      .hero-sticky {
+        height: 100vh;
+        height: 100dvh;
+      }
     }
   </style>
 </head>
@@ -533,6 +540,7 @@
     var ctx = canvas.getContext('2d');
     var loadingText = document.getElementById('heroScrubLoading');
     var wrapper = canvas.closest('.hero-scroll-wrap');
+    var sticky = canvas.closest('.hero-sticky');
     var textLayer = document.getElementById('heroTextLayer');
 
     var images = new Array(FRAME_COUNT);
@@ -543,6 +551,7 @@
     var easedFrame = 0;
     var wrapperTop = 0;
     var wrapperHeight = 0;
+    var stickyHeight = 0;
     var lastViewportWidth = window.innerWidth;
     var isMobileViewport = window.matchMedia('(max-width: 780px)').matches;
 
@@ -550,6 +559,7 @@
     function refreshScrollBounds(updateTop) {
       if (updateTop) wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
       wrapperHeight = wrapper.offsetHeight;
+      stickyHeight = sticky.offsetHeight;
     }
 
     function resizeCanvas() {
@@ -565,15 +575,23 @@
       if (currentFrame >= 0) drawFrame(currentFrame);
     }
 
-    function onResize() {
-      var widthChanged = window.innerWidth !== lastViewportWidth;
-      if (isMobileViewport && !widthChanged) return;
-      lastViewportWidth = window.innerWidth;
-      isMobileViewport = window.matchMedia('(max-width: 780px)').matches;
-      refreshScrollBounds(widthChanged);
-      resizeCanvas();
+    var resizeScheduled = false;
+    function onViewportResize() {
+      if (resizeScheduled) return;
+      resizeScheduled = true;
+      requestAnimationFrame(function () {
+        resizeScheduled = false;
+        var widthChanged = window.innerWidth !== lastViewportWidth;
+        lastViewportWidth = window.innerWidth;
+        isMobileViewport = window.matchMedia('(max-width: 780px)').matches;
+        refreshScrollBounds(widthChanged);
+        resizeCanvas();
+      });
     }
-    window.addEventListener('resize', onResize);
+    window.addEventListener('resize', onViewportResize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', onViewportResize, { passive: true });
+    }
 
     var lastDrawnFrame = 0;
     function nearestLoadedFrame(target) {
@@ -707,7 +725,7 @@
 
     var ticking = false;
     function updateHeroFrame() {
-      var scrollDistance = Math.max(0, wrapperHeight - window.innerHeight);
+      var scrollDistance = Math.max(0, wrapperHeight - stickyHeight);
       var scrolled = Math.min(Math.max(window.scrollY - wrapperTop, 0), scrollDistance);
       var progress = scrollDistance > 0 ? scrolled / scrollDistance : 0;
       targetFrame = Math.min(FRAME_COUNT - 1, Math.floor(progress * FRAME_COUNT));
