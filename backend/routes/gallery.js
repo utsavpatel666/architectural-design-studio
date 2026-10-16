@@ -6,6 +6,15 @@ const adminAuth = require("../middleware/adminAuth");
 const upload = require("../middleware/upload");
 
 const router = express.Router();
+const MAX_GALLERY3D_ITEMS = 28;
+
+async function removeUploadedFiles(files) {
+  await Promise.all(files.map((file) => fs.promises.unlink(file.path).catch((error) => {
+    if (error.code !== "ENOENT") {
+      console.error("Could not remove a rejected gallery upload:", error);
+    }
+  })));
+}
 
 function inferMediaType(filePath) {
   if (!filePath) return "image";
@@ -139,25 +148,51 @@ router.post(
       ? String(displayIn).toLowerCase()
       : "both";
 
-    const result = await db.query(
-      `INSERT INTO gallery (title, bhk_type, media_type, file_path, description, sort_order, display_in, cover_index, cover_explicit, media)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING *`,
-      [
-        title.trim(),
-        bhkType.trim(),
-        media[0].type,
-        media[0].file_path,
-        description || null,
-        Number(sortOrder) || 0,
-        normalizedDisplayIn,
-        safeCoverIndex,
-        coverExplicit,
-        JSON.stringify(media),
-      ]
-    );
+    const client = await db.getClient();
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock($1)", [731942851]);
 
-    res.status(201).json(normalizeItem(result.rows[0]));
+      if (normalizedDisplayIn !== "portfolio") {
+        const countResult = await client.query(
+          "SELECT COUNT(*) FROM gallery WHERE display_in IN ('both', 'gallery3d')"
+        );
+        if (Number(countResult.rows[0].count) >= MAX_GALLERY3D_ITEMS) {
+          await client.query("ROLLBACK");
+          await removeUploadedFiles(uploadedFiles);
+          return res.status(409).json({
+            error: "The 3D gallery is limited to 28 items. This upload would exceed the limit; set it to Portfolio only or remove an item first.",
+          });
+        }
+      }
+
+      const result = await client.query(
+        `INSERT INTO gallery (title, bhk_type, media_type, file_path, description, sort_order, display_in, cover_index, cover_explicit, media)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         RETURNING *`,
+        [
+          title.trim(),
+          bhkType.trim(),
+          media[0].type,
+          media[0].file_path,
+          description || null,
+          Number(sortOrder) || 0,
+          normalizedDisplayIn,
+          safeCoverIndex,
+          coverExplicit,
+          JSON.stringify(media),
+        ]
+      );
+      await client.query("COMMIT");
+      res.status(201).json(normalizeItem(result.rows[0]));
+    } catch (error) {
+      await client.query("ROLLBACK").catch((rollbackError) => {
+        console.error("Could not roll back gallery upload:", rollbackError);
+      });
+      throw error;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     next(error);
   }
